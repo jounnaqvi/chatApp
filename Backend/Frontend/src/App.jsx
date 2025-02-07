@@ -3,7 +3,8 @@ import React from "react";
 import Left from "./home/left/Left"
 // import Right from "./home/Rightpart/Right";
 import Right  from "./home/right/Right"
-import Signup from "./components/Signup.jsx";
+import SignUp from "./components/Signup.jsx";
+
 import Login from "./components/Login";
 import { useAuth } from "./context/AuthProvider";
 import { Toaster } from "react-hot-toast";
@@ -41,7 +42,7 @@ function App() {
         />
         <Route
           path="/signup"
-          element={authUser ? <Navigate to="/" /> : <Signup />}
+          element={authUser ? <Navigate to="/" /> : <SignUp />}
         />
       <Route path="/logout" element={<Logout />} />
 
