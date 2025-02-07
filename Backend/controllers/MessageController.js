@@ -1,5 +1,5 @@
 import Conversation from "../models/ConversationModel.js";
-import Message from "../models/MessageModel.js";
+import Message from "../models/messageModel.js";
 import { getReceiverSocketId, io } from "../SocketIo/server.js";
 
 // Send message
