@@ -12,17 +12,21 @@ dotenv.config(); // Load environment variables
 console.log("MONGO_URI:", process.env.MONGO_URI); // Debugging
 
 app.use(cookieParser());
-
-// CORS Setup
-const corsOptions = {
-  origin: ["http://localhost:4001", "http://localhost:4002"], // Allowed frontend domains
-  methods: "GET,POST,PUT,DELETE",
-  credentials: true,
-};
-app.use(cors(corsOptions));
 app.use(express.json());
 
-// MongoDB Connection Function
+// ✅ CORS Setup (Fixes the error)
+const corsOptions = {
+  origin: [
+    "http://localhost:4001", 
+    "http://localhost:4002", 
+    "https://chatapp-pice.onrender.com" // ✅ Add deployed frontend URL
+  ],
+  methods: "GET,POST,PUT,DELETE",
+  credentials: true, // ✅ Allow cookies
+};
+app.use(cors(corsOptions));
+
+// ✅ MongoDB Connection Function
 const connectDB = async () => {
   try {
     const MONGO_URI = process.env.MONGO_URI;
@@ -31,7 +35,8 @@ const connectDB = async () => {
     }
 
     await mongoose.connect(MONGO_URI, {
-  
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
 
     console.log("✅ Database connected successfully!");
@@ -41,14 +46,14 @@ const connectDB = async () => {
   }
 };
 
-// Call the function to connect to MongoDB
+// ✅ Call function to connect to MongoDB
 connectDB();
 
-// Routes
+// ✅ Routes
 app.use("/user", UserRoute);
 app.use("/message", MessageRoute);
 
-// Serve frontend in production
+// ✅ Serve frontend in production
 if (process.env.NODE_ENV === "production") {
   const dirPath = path.resolve();
   app.use(express.static("./Frontend/dist"));
@@ -57,7 +62,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Start server
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
