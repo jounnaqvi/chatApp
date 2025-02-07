@@ -8,7 +8,7 @@ const server = http.createServer(app);
 // Initialize socket.io
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:4001", "http://localhost:5002"], 
+    origin: ["https://chatapp-pice.onrender.com"], 
     methods: ["GET", "POST"],
   },
 });

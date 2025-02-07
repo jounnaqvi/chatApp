@@ -15,7 +15,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser && authUser.user?._id) {
-      const newSocket = io("http://localhost:5002", {
+      const newSocket = io("https://chatapp-pice.onrender.com", {
         auth: { userId: authUser.user._id }, // ✅ Send userId in `auth`
         transports: ["websocket"], // 🔧 Ensures real-time stability
       });
