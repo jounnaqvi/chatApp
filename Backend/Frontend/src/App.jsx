@@ -3,14 +3,14 @@ import React from "react";
 import Left from "./home/left/Left"
 // import Right from "./home/Rightpart/Right";
 import Right  from "./home/right/Right"
-import Signup from "./components/Signup";
+import Signup from "./components/Signup.jsx";
 import Login from "./components/Login";
 import { useAuth } from "./context/AuthProvider";
 import { Toaster } from "react-hot-toast";
 import Logout from "./home/left1/Logout1";
 
 import { Navigate, Route, Routes } from "react-router-dom";
-import Loading from "./components/Loading";
+
 // import { logout } from "../../Backend/controllers/UserController";
 function App() {
   const [authUser, setAuthUser] = useAuth();
