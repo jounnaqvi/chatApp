@@ -5,7 +5,7 @@ import express from "express";
 const app = express();
 const server = http.createServer(app);
 
-// Initialize socket.io
+// Initialize socket.io with CORS
 const io = new Server(server, {
   cors: {
     origin: ["https://chatapp-pice.onrender.com"], 
@@ -35,7 +35,11 @@ io.on("connection", (socket) => {
     const newMessage = { senderId, receiverId, message };
 
     // ✅ Send message back to sender
-    io.to(users[senderId]).emit("newMessage", newMessage);
+    if (users[senderId]) {
+      io.to(users[senderId]).emit("newMessage", newMessage);
+    } else {
+      console.log("🚫 Sender socket not found.");
+    }
 
     // ✅ Send message to receiver if online
     const receiverSocketId = getReceiverSocketId(receiverId);

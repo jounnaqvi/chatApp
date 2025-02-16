@@ -1,5 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import Cookies from 'js-cookie';  // Import Cookies library
+import React, { createContext, useState, useContext, useEffect } from "react";
+import Cookies from "js-cookie";
 
 const AuthContext = createContext();
 
@@ -9,11 +9,12 @@ export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
-    // First, check if there's a token in localStorage
     const storedToken = localStorage.getItem("jwt");
     const storedUser = localStorage.getItem("user");
 
-    // If localStorage has the token and user, use them
+    console.log("LocalStorage Token:", storedToken);
+    console.log("LocalStorage User:", storedUser);
+
     if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -21,29 +22,33 @@ export const AuthProvider = ({ children }) => {
           user: parsedUser,
           token: storedToken,
         });
+        console.log("AuthUser set from LocalStorage:", parsedUser);
       } catch (error) {
         console.error("Error parsing authUser from localStorage:", error);
         localStorage.removeItem("jwt");
         localStorage.removeItem("user");
       }
-    }
+    } else {
+      // Fallback to cookies
+      const cookieToken = Cookies.get("jwt");
+      const cookieUser = Cookies.get("user");
 
-    // Check if there's a token in cookies as fallback
-    const cookieToken = Cookies.get("jwt");
-    const cookieUser = Cookies.get("user");
+      console.log("Cookie Token:", cookieToken);
+      console.log("Cookie User:", cookieUser);
 
-    // If there's a token in cookies and no localStorage data, use cookies
-    if (cookieToken && cookieUser) {
-      try {
-        const parsedUser = JSON.parse(cookieUser);
-        setAuthUser({
-          user: parsedUser,
-          token: cookieToken,
-        });
-      } catch (error) {
-        console.error("Error parsing authUser from Cookies:", error);
-        Cookies.remove("jwt");
-        Cookies.remove("user");
+      if (cookieToken && cookieUser) {
+        try {
+          const parsedUser = JSON.parse(cookieUser);
+          setAuthUser({
+            user: parsedUser,
+            token: cookieToken,
+          });
+          console.log("AuthUser set from Cookies:", parsedUser);
+        } catch (error) {
+          console.error("Error parsing authUser from Cookies:", error);
+          Cookies.remove("jwt");
+          Cookies.remove("user");
+        }
       }
     }
   }, []);

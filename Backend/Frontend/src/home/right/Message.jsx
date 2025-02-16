@@ -13,14 +13,21 @@ const Message = ({ message }) => {
     return <div>Loading...</div>;
   }
 
-  // ✅ Ensure message structure is correct
+  // ✅ Extract actual message object
   const actualMessage = message?.newMessage || message;
 
-  if (!actualMessage || !actualMessage.senderId) {
+  if (!actualMessage || typeof actualMessage !== "object" || !actualMessage.senderId) {
+    console.warn("⚠️ Invalid message structure:", actualMessage);
     return <div>⚠️ No message data available!</div>;
   }
 
   const isSender = authUser.user._id === actualMessage.senderId;
+
+  // ✅ Extract correct message text
+  const messageText =
+    actualMessage?.message?.message || // If `message` is nested inside `message`
+    actualMessage?.message || // If `message` is directly inside the object
+    "⚠️ Message content not available";
 
   // ✅ Convert timestamp to readable format
   const formatTime = (timestamp) => {
@@ -34,7 +41,7 @@ const Message = ({ message }) => {
   return (
     <div key={actualMessage._id} className={`p-4 ${isSender ? "chat-end" : "chat-start"}`}>
       <div className={`chat-bubble ${isSender ? "chat-bubble-accent" : ""}`}>
-        <p>{actualMessage.message || "No message text available"}</p>
+        <p>{messageText}</p>
         <small className="text-gray-400 text-xs block text-right mt-1">
           {formatTime(actualMessage.createdAt)}
         </small>

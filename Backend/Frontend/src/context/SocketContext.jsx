@@ -3,10 +3,7 @@ import { useAuth } from "./AuthProvider";
 import io from "socket.io-client";
 
 const SocketContext = createContext();
-
-export const useSocketContext = () => {
-  return useContext(SocketContext);
-};
+export const useSocketContext = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
@@ -20,13 +17,29 @@ export const SocketProvider = ({ children }) => {
         transports: ["websocket"], // 🔧 Ensures real-time stability
       });
 
-      setSocket(newSocket);
+      newSocket.on("connect", () => {
+        console.log("✅ Connected to WebSocket:", newSocket.id);
+      });
+
+      newSocket.on("connect_error", (err) => {
+        console.error("❌ WebSocket Connection Error:", err.message);
+      });
+
+      newSocket.on("disconnect", (reason) => {
+        console.warn("🔌 Disconnected:", reason);
+      });
 
       newSocket.on("onlineUsers", (users) => {
+        console.log("👥 Online Users:", users);
         setOnlineUsers(users);
       });
 
-      return () => newSocket.close();
+      setSocket(newSocket);
+
+      return () => {
+        newSocket.close();
+        console.log("🔌 Socket Disconnected");
+      };
     } else {
       if (socket) {
         socket.close();

@@ -1,41 +1,64 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import useConversation from "../statemanage/useConversation.js";
+import { useSocketContext } from "../context/SocketContext";
 import axios from "axios";
 
 const useSendMessage = () => {
   const [loading, setLoading] = useState(false);
-  const { messages, setMessages, selectedConversation } = useConversation();
+  const { setMessages, addMessage, selectedConversation } = useConversation();
+  const { socket } = useSocketContext(); 
 
   const sendMessages = async (message) => {
+    if (!selectedConversation?._id) {
+      console.warn("⚠️ No conversation selected.");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Get token from localStorage
       const token = localStorage.getItem("jwt");
-      
-      // If token is not available, you can handle accordingly (like showing a message or redirecting to login)
       if (!token) {
-        console.error("No token found. Please log in again.");
+        console.error("❌ No token found. Please log in again.");
         setLoading(false);
         return;
       }
 
-      // Send the message with the token in the Authorization header
       const res = await axios.post(
         `http://localhost:5002/message/send/${selectedConversation._id}`,
         { message },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add token in Authorization header
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update messages with the new one
-      setMessages([...messages, res.data]);
+      if (res.data?.newMessage) {
+        console.log("📩 Message sent successfully:", res.data.newMessage);
+        addMessage(res.data.newMessage); 
 
-      setLoading(false);
+        if (!socket || !socket.connected) {
+          console.warn("⚠️ Socket not ready. Retrying in 2s...");
+          setTimeout(() => {
+            if (socket && socket.connected) {
+              socket.emit("sendMessage", {
+                senderId: res.data.newMessage.senderId,
+                receiverId: selectedConversation._id,
+                message: res.data.newMessage,
+              });
+              console.log("📡 Message sent after reconnection.");
+            } else {
+              console.error("❌ Socket still not connected.");
+            }
+          }, 2000);
+        } else {
+          console.log("📡 Emitting message via socket...");
+          socket.emit("sendMessage", {
+            senderId: res.data.newMessage.senderId,
+            receiverId: selectedConversation._id,
+            message: res.data.newMessage,
+          });
+        }
+      }
     } catch (error) {
-      console.log("Error in send messages", error);
+      console.error("❌ Error sending message:", error.response?.data || error);
+    } finally {
       setLoading(false);
     }
   };

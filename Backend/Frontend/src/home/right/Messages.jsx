@@ -1,30 +1,55 @@
 import React, { useEffect, useRef, useState } from "react";
 import useGetMessage from "../../context/useGetMessage";
-import Message from "./Message"; // Import Message component
 import useGetSocketMessage from "../../context/useGetSocketMessage";
+import Message from "./Message";
+import { useSocketContext } from "../../context/SocketContext"; // Import socket context
 
 const Messages = () => {
-  const { messages, loading } = useGetMessage();
-  const messagesEndRef = useRef(null); // Reference to scroll to the end
+  const { messages, loading } = useGetMessage(); // Fetch initial messages
+  const { socket } = useSocketContext(); // Get socket from context
+  const messagesEndRef = useRef(null); // Ref for auto-scrolling
   const [uniqueMessages, setUniqueMessages] = useState([]);
-  useGetSocketMessage();
-  console.log(messages);
 
-  // ✅ Ensure messages are unique
+  useGetSocketMessage(); // Listen for incoming messages
+
+  // ✅ Ensure messages are unique & updated
   useEffect(() => {
     if (Array.isArray(messages)) {
-      const filteredMessages = messages.reduce((acc, msg) => {
-        if (!acc.some((m) => m._id === msg._id)) {
-          acc.push(msg);
-        }
-        return acc;
-      }, []);
-
-      setUniqueMessages(filteredMessages);
+      setUniqueMessages((prevMessages) => {
+        const newMessages = messages.filter(
+          (newMsg) => !prevMessages.some((msg) => msg._id === newMsg._id)
+        );
+        return [...prevMessages, ...newMessages];
+      });
     }
   }, [messages]);
 
-  // ✅ Scroll to bottom when new messages arrive
+  // ✅ Listen for real-time messages from socket
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (newMessage) => {
+      console.log("📩 New real-time message received:", newMessage);
+      
+      if (!newMessage || typeof newMessage !== "object" || !newMessage._id) {
+        console.warn("⚠️ Invalid message structure:", newMessage);
+        return;
+      }
+
+      setUniqueMessages((prevMessages) => {
+        const exists = prevMessages.some((msg) => msg._id === newMessage._id);
+        return exists ? prevMessages : [...prevMessages, newMessage];
+      });
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket]);
+
+  // ✅ Auto-scroll to the latest message
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -44,7 +69,7 @@ const Messages = () => {
       ) : (
         <p className="text-center">No messages found.</p>
       )}
-      {/* Scroll to the bottom */}
+      {/* Auto-scroll reference */}
       <div ref={messagesEndRef} />
     </div>
   );
